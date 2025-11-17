@@ -22,25 +22,31 @@ A full-stack inventory management system for ShopSphere retail company to track 
 
 ### Backend
 - **Node.js** with Express.js
-- **SQLite** database (better-sqlite3)
+- **MySQL** database (mysql2)
 - RESTful API endpoints
 
 ### Frontend
 - **React** 18.2.0
 - **Axios** for API calls
+- **Nginx** for production serving
 - Modern CSS with responsive design
+
+### DevOps
+- **Docker** containers for all services
+- **Docker Compose** for orchestration
+- **MySQL 8.0** for data persistence
 
 ## Database Schema
 
 ```sql
 CREATE TABLE products (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  category TEXT NOT NULL,
-  quantity INTEGER NOT NULL DEFAULT 0,
-  price REAL NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  category VARCHAR(100) NOT NULL,
+  quantity INT NOT NULL DEFAULT 0,
+  price DECIMAL(10, 2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )
 ```
 
@@ -58,12 +64,74 @@ CREATE TABLE products (
 
 ## Installation & Setup
 
-### Prerequisites
+### Option 1: Docker Deployment (Recommended)
+
+Docker provides the easiest way to run the entire application with all dependencies.
+
+#### Prerequisites
+- Docker Engine (v20.10+)
+- Docker Compose (v2.0+)
+
+#### Quick Start
+```bash
+# Clone the repository
+git clone <repository-url>
+cd Employee-Management-system
+
+# Build and start all containers
+docker-compose up --build -d
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:5000
+# MySQL: localhost:3306
+```
+
+#### Docker Commands
+```bash
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+
+# Stop and remove all data
+docker-compose down -v
+
+# Restart services
+docker-compose restart
+```
+
+For detailed Docker documentation, see [DOCKER_GUIDE.md](DOCKER_GUIDE.md)
+
+### Option 2: Local Development (Without Docker)
+
+#### Prerequisites
 - Node.js (v14 or higher)
+- MySQL 8.0 installed and running
 - npm or yarn
 
-### Step 1: Install Dependencies
+#### Step 1: Setup MySQL Database
+```bash
+# Login to MySQL
+mysql -u root -p
 
+# Create database
+CREATE DATABASE inventory_db;
+exit;
+```
+
+#### Step 2: Configure Environment
+Create a `.env` file in the root directory:
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=inventory_db
+PORT=5000
+```
+
+#### Step 3: Install Dependencies
 ```bash
 # Install server dependencies
 npm install
@@ -74,34 +142,52 @@ npm install
 cd ..
 ```
 
-### Step 2: Start the Application
+#### Step 4: Start the Application
 
-**Option 1: Development Mode (Both servers)**
-
-Terminal 1 - Start Backend:
+**Terminal 1 - Start Backend:**
 ```bash
 npm start
 ```
 
-Terminal 2 - Start Frontend:
+**Terminal 2 - Start Frontend:**
 ```bash
 npm run client
 ```
 
-**Option 2: Production Build**
-
-```bash
-# Build the React app
-npm run build
-
-# Serve the built app (requires serve package)
-npx serve -s client/build
-```
-
-### Step 3: Access the Application
+### Access the Application
 
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5000
+
+## Docker Architecture
+
+The application uses a multi-container Docker setup:
+
+```
+┌─────────────────┐
+│   Frontend      │  Port 3000 (Nginx + React)
+│   Container     │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   Backend       │  Port 5000 (Node.js + Express)
+│   Container     │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   MySQL         │  Port 3306 (MySQL 8.0)
+│   Container     │
+└─────────────────┘
+```
+
+### Container Details
+- **Frontend**: React app built and served by Nginx
+- **Backend**: Node.js/Express API with MySQL connection
+- **Database**: MySQL 8.0 with persistent volume storage
+
+All containers communicate via a dedicated Docker network.
 
 ## Usage Guide
 
